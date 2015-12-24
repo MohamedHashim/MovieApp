@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.mohamedhashim.movie.MainActivity">
+    <item android:id="@+id/most_popular"
+          android:title="Most Popular"
+          app:showAsAction="never"/>
+    <item android:id="@+id/highest_rated"
+        android:title="Highest Rated"
+        app:showAsAction="never"/>
+    <item android:id="@+id/favorite"
+        android:title="Favorites"
+        app:showAsAction="never"/>
+</menu>
