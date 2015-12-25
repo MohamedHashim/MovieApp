@@ -11,6 +11,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        //   new JSONTask().execute("http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=5bf92cd209aa47161a39f6ab96f0e0fe&append_to_response=images&include_image_language=en,null");
+         new JSONTask().execute("http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=5bf92cd209aa47161a39f6ab96f0e0fe&append_to_response=images&include_image_language=en,null");
         lvMovies = (GridView) findViewById(R.id.lvMovies);
     }
 
@@ -78,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
                 for (int i = 0; i < parentArray.length();i++) {
                     JSONObject finalObject = parentArray.getJSONObject(i);
-                    Result moviemodel = new Result();
+                    Result moviemodel = new Result(null,null,null,null,null,null,null);
                     moviemodel.setTitle(finalObject.getString("title"));
                     moviemodel.setReleaseDate(finalObject.getString("release_date"));
                     moviemodel.setPopularity(finalObject.getDouble("popularity"));
@@ -121,15 +122,16 @@ public class MainActivity extends AppCompatActivity {
             lvMovies.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Toast toast=Toast.makeText(getApplicationContext(),adapter.movieModelList.get(position).getTitle() ,Toast.LENGTH_SHORT);
-                    toast.show();
-                  startActivity(new Intent(getApplicationContext(), DetailsActivity.class));
+                    //Toast toast = Toast.makeText(getApplicationContext(), adapter.movieModelList.get(position).getTitle(), Toast.LENGTH_SHORT);
+                   // toast.show();
+                    //  startActivity(new Intent(getApplicationContext(), DetailsActivity.class));
 
+                  //  Intent intent=new Intent(getApplicationContext(),DetailsActivity.class).putExtra("json",);
+                   // startActivity(intent);
                 }
             });
         }
     }
-
     public class MovieAdapter extends ArrayAdapter{
         private List<Result> movieModelList;
         private int resource;
@@ -142,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             if(convertView==null){
                 convertView=inflater.inflate(resource,null);
             }
@@ -151,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
             TextView tvYear;
             TextView tvRate;
             TextView vote_count;
+            String trailer;
+
 
             //  RatingBar rbMovieRating;
 
@@ -160,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
             tvYear= (TextView) convertView.findViewById(R.id.tvYear);
             tvRate= (TextView) convertView.findViewById(R.id.average);
             vote_count= (TextView) convertView.findViewById(R.id.vote_count);
+
             // rbMovieRating= (RatingBar) convertView.findViewById(R.id.rbMovie);
 
 
@@ -167,13 +172,49 @@ public class MainActivity extends AppCompatActivity {
             tvYear.setText(movieModelList.get(position).getReleaseDate());
             tvRate.setText(movieModelList.get(position).getVoteAverage().toString());
             vote_count.setText(movieModelList.get(position).getVoteCount().toString());
+            tvRate.setText(movieModelList.get(position).getVoteAverage().toString());
+//            vote_count.setText(movieModelList.get(position).getVoteCount());
+            trailer= String.valueOf(movieModelList.get(position).getId());
 
+
+            ivMovieIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent =new Intent(getApplicationContext(),DetailsActivity.class);
+                 /*   intent.putExtra("title",movieModelList.get(position).getTitle());
+                    intent.putExtra("year",movieModelList.get(position).getReleaseDate());
+                    intent.putExtra("rate",movieModelList.get(position).getPopularity());
+                    intent.putExtra("vote",movieModelList.get(position).getVoteCount());
+                    intent.putExtra("image",movieModelList.get(position).getPosterPath());
+                    intent.putExtra("ratingbar",movieModelList.get(position).getPopularity()/4);
+                    intent.putExtra("description",movieModelList.get(position).getOverview());
+                 //  intent.putExtra("views",movieModelList.get(position).);
+*/
+                    intent.putExtra("data",new Result(movieModelList.get(position).getPosterPath(),movieModelList.get(position).getOverview(),movieModelList.get(position).getReleaseDate(),movieModelList.get(position).getTitle(),movieModelList.get(position).getPopularity(),movieModelList.get(position).getVoteCount(),movieModelList.get(position).getVoteAverage()));
+                    startActivity(intent);
+
+                }
+            });
 
              Picasso.with(this.getContext()).load("http://image.tmdb.org/t/p/w185/" + movieModelList.get(position).getPosterPath()).into(ivMovieIcon);
 
             return convertView;
         }
 
+        @Override
+        public int getCount() {
+            return super.getCount();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return super.getItem(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return super.getItemId(position);
+        }
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

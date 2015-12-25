@@ -1,9 +1,10 @@
 package com.example.mohamedhashim.hashim;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Result {
+public class Result implements Serializable {
 
     private String posterPath;
     private Boolean adult;
@@ -20,6 +21,21 @@ public class Result {
     private Boolean video;
     private Double voteAverage;
 
+    public Result(String posterPath, String overview, String releaseDate, String title, Double popularity, Integer voteCount, Double voteAverage) {
+        this.posterPath = posterPath;
+        this.overview = overview;
+        this.releaseDate = releaseDate;
+        this.genreIds = genreIds;
+        this.id = id;
+        this.originalTitle = originalTitle;
+        this.originalLanguage = originalLanguage;
+        this.title = title;
+        this.backdropPath = backdropPath;
+        this.popularity = popularity;
+        this.voteCount = voteCount;
+        this.video = video;
+        this.voteAverage = voteAverage;
+    }
 
     public String getPosterPath() {
         return posterPath;
