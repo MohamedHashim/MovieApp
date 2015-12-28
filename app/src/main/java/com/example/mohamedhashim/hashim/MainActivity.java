@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -44,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
          new JSONTask().execute("http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=5bf92cd209aa47161a39f6ab96f0e0fe&append_to_response=images&include_image_language=en,null");
         lvMovies = (GridView) findViewById(R.id.lvMovies);
     }
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
                 for (int i = 0; i < parentArray.length();i++) {
                     JSONObject finalObject = parentArray.getJSONObject(i);
-                    Result moviemodel = new Result(null,null,null,null,null,null,null);
+                    Result moviemodel = new Result(null,null,null,null,null,null,null,null);
                     moviemodel.setTitle(finalObject.getString("title"));
                     moviemodel.setReleaseDate(finalObject.getString("release_date"));
                     moviemodel.setPopularity(finalObject.getDouble("popularity"));
@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                     moviemodel.setPosterPath(finalObject.getString("poster_path"));
                     moviemodel.setVoteAverage(finalObject.getDouble("vote_average"));
                     moviemodel.setVoteCount(finalObject.getInt("vote_count"));
+                    moviemodel.setId(finalObject.getString("id"));
 
                     // adding  the final object in the list
                     movieModelList.add(moviemodel);
@@ -119,17 +120,8 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(result);
             final MovieAdapter adapter=new MovieAdapter(getApplicationContext(),R.layout.row,result);
             lvMovies.setAdapter(adapter);
-            lvMovies.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    //Toast toast = Toast.makeText(getApplicationContext(), adapter.movieModelList.get(position).getTitle(), Toast.LENGTH_SHORT);
-                   // toast.show();
-                    //  startActivity(new Intent(getApplicationContext(), DetailsActivity.class));
 
-                  //  Intent intent=new Intent(getApplicationContext(),DetailsActivity.class).putExtra("json",);
-                   // startActivity(intent);
-                }
-            });
+
         }
     }
     public class MovieAdapter extends ArrayAdapter{
@@ -153,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
             TextView tvYear;
             TextView tvRate;
             TextView vote_count;
-            String trailer;
 
 
             //  RatingBar rbMovieRating;
@@ -174,8 +165,6 @@ public class MainActivity extends AppCompatActivity {
             vote_count.setText(movieModelList.get(position).getVoteCount().toString());
             tvRate.setText(movieModelList.get(position).getVoteAverage().toString());
 //            vote_count.setText(movieModelList.get(position).getVoteCount());
-            trailer= String.valueOf(movieModelList.get(position).getId());
-
 
             ivMovieIcon.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -190,7 +179,9 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra("description",movieModelList.get(position).getOverview());
                  //  intent.putExtra("views",movieModelList.get(position).);
 */
-                    intent.putExtra("data",new Result(movieModelList.get(position).getPosterPath(),movieModelList.get(position).getOverview(),movieModelList.get(position).getReleaseDate(),movieModelList.get(position).getTitle(),movieModelList.get(position).getPopularity(),movieModelList.get(position).getVoteCount(),movieModelList.get(position).getVoteAverage()));
+                    Toast toast = Toast.makeText(getApplicationContext(), movieModelList.get(position).getTitle(), Toast.LENGTH_SHORT);
+                    toast.show();
+                    intent.putExtra("data", new Result(movieModelList.get(position).getPosterPath(), movieModelList.get(position).getOverview(), movieModelList.get(position).getReleaseDate(), movieModelList.get(position).getTitle(), movieModelList.get(position).getPopularity(), movieModelList.get(position).getVoteCount(), movieModelList.get(position).getVoteAverage(),movieModelList.get(position).getId()));
                     startActivity(intent);
 
                 }
@@ -200,12 +191,12 @@ public class MainActivity extends AppCompatActivity {
 
             return convertView;
         }
-
+/*
         @Override
         public int getCount() {
             return super.getCount();
         }
-
+*/
         @Override
         public Object getItem(int position) {
             return super.getItem(position);

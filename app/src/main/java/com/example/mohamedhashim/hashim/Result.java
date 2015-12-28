@@ -11,7 +11,7 @@ public class Result implements Serializable {
     private String overview;
     private String releaseDate;
     private List<Integer> genreIds = new ArrayList<Integer>();
-    private Integer id;
+    private String Id;
     private String originalTitle;
     private String originalLanguage;
     private String title;
@@ -21,12 +21,12 @@ public class Result implements Serializable {
     private Boolean video;
     private Double voteAverage;
 
-    public Result(String posterPath, String overview, String releaseDate, String title, Double popularity, Integer voteCount, Double voteAverage) {
+    public Result(String posterPath, String overview, String releaseDate, String title, Double popularity, Integer voteCount, Double voteAverage,String Id) {
         this.posterPath = posterPath;
         this.overview = overview;
         this.releaseDate = releaseDate;
         this.genreIds = genreIds;
-        this.id = id;
+        this.Id = Id;
         this.originalTitle = originalTitle;
         this.originalLanguage = originalLanguage;
         this.title = title;
@@ -77,14 +77,11 @@ public class Result implements Serializable {
         this.genreIds = genreIds;
     }
 
-    public Integer getId() {
-        return id;
+    public String getId() {
+        return Id;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
+    public void setId(String Id) {this.Id = Id;}
     public String getOriginalTitle() {
         return originalTitle;
     }
