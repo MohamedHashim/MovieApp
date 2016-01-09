@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">Hashim</string>
     <string name="action_refresh">Refresh</string>
+    <string name="pref_sort_fav" translatable="false">favourite</string>
+    <string name="pref_sort_key" translatable="false">sort</string>
+    <string name="pref_sort_label">SortBy</string>
+    <string name="pref_sort_label_pop">Popularity</string>
+    <string name="pref_sort_label_rate">Rating</string>
+    <string name="pref_sort_label_fav">Favourite</string>
+    <string name="pref_sort_pop" translatable="false">popularity</string>
+    <string name="pref_sort_rate" translatable="false">vote_count</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
 </resources>

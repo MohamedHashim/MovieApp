@@ -1,21 +1,26 @@
 package com.example.mohamedhashim.hashim;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,24 +39,32 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DetailsActivity extends AppCompatActivity {
-String pos;
+    String pos;
+    private final String API_KEY = "5bf92cd209aa47161a39f6ab96f0e0fe";
+
     ReviewKey REV=new ReviewKey();
+    Result r;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.details);
 
 
-        Result r=new Result(null,null,null,null,null,null,null,null);
         r = (Result)getIntent().getSerializableExtra("data");
+        new AsyncReview().execute("reviews");
 
-        new JSONTaskReview().execute("http://api.themoviedb.org/3/movie/" + r.getId() + "/reviews?api_key=5bf92cd209aa47161a39f6ab96f0e0fe");
+        // new JSONTaskReview().execute("http://api.themoviedb.org/3/movie/" + r.getId() + "/reviews?api_key=5bf92cd209aa47161a39f6ab96f0e0fe");
 
+        ImageView backdrop_path= (ImageView) findViewById(R.id.backdrop_path);
+        Picasso.with(this.getApplication()).load("http://image.tmdb.org/t/p/w185/"+r.getBackdropPath()).into(backdrop_path);
+        Log.d("backpath : ","http://image.tmdb.org/t/p/w185/"+r.getBackdropPath());
 
-//        Log.d("ID JSON",r.getId());
         TextView overview= (TextView) findViewById(R.id.description);
         overview.setText("DESCRIPTION :\n\n"+r.getOverview()+"\n\n\n");
 
@@ -67,182 +80,246 @@ String pos;
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Result r;
-                r = (Result) getIntent().getSerializableExtra("data");
-                new JSONTaskTrailer().execute("http://api.themoviedb.org/3/movie/" + r.getId() + "/videos?api_key=5bf92cd209aa47161a39f6ab96f0e0fe");
-                Log.d("ID : ", "http://api.themoviedb.org/3/movie/" + r.getId() + "/videos?api_key=5bf92cd209aa47161a39f6ab96f0e0fe");
-//                Intent intent=new Intent(getApplicationContext(),Trailer.class);
-                // startActivity(i);
+               new JSONTaskTrailer().execute("videos");
+                Log.d("TEST ID : ", "http://api.themoviedb.org/3/movie/" + r.getId() + "/videos?api_key=5bf92cd209aa47161a39f6ab96f0e0fe");
             }
         });
 
-/*
-       TextView votecount= (TextView) findViewById(R.id.votecount);
-        votecount.setText(r.getVoteCount());
-*/
         TextView rate= (TextView) findViewById(R.id.rate);
         rate.setText(r.getVoteAverage().toString());
 
         ImageView image= (ImageView) findViewById(R.id.IconImage);
-       // Toast.makeText(this,r.getPosterPath(),Toast.LENGTH_SHORT).show();
+        // Toast.makeText(this,r.getPosterPath(),Toast.LENGTH_SHORT).show();
         Picasso.with(this.getApplication()).load("http://image.tmdb.org/t/p/w185/"+r.getPosterPath()).into(image);
+        Log.d("image: ", "http://image.tmdb.org/t/p/w185/" + r.getPosterPath());
 
         RatingBar ratingBar= (RatingBar) findViewById(R.id.RatingBar);
-        ratingBar.setRating(r.getVoteAverage().intValue() / 2);
+        ratingBar.setRating((r.getVoteAverage().intValue()/2));
+
+        ImageButton btnFavourite= (ImageButton) findViewById(R.id.btnfav);
+
+        }
 
 
 
-  /*
+    private void ShowTrailers(final ArrayList<TrailerKey> trailers){
+        final String[] items = new String[trailers.size()];
+        final ArrayList<String> list = new ArrayList<String>();
+        for (int i = 0; i < trailers.size(); i++) {
+            items[i] = trailers.get(i).getName()+"               Quality - "+trailers.get(i).getSize()+"p";
+            list.add(items[i]);
+        }
 
-        pos=intent.getExtras().getString("vote");
-        final TextView movie_vote = (TextView) findViewById(R.id.votecount);
-        movie_vote.setText(pos);
+        ListView lv= (ListView) findViewById(R.id.TrailerlistView);
+        lv.setAdapter(new ArrayAdapter<String>(this,R.layout.trailer_listview, list));
+        if(list.size()==0){
+            Toast toast = Toast.makeText(getApplicationContext(), "This movie has NO Trailers !", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final Uri.Builder builder = new Uri.Builder()
+                        .scheme("http")
+                        .authority("youtube.com")
+                        .appendPath("watch")
+                        .appendQueryParameter("v", trailers.get(position).getKey());
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(builder.toString())));
+            }
+        });
+    }
 
-*/
+    private ArrayList<TrailerKey> getmeURLS(JSONObject root) throws JSONException {
+        String jsonResults = "results";
+        String jsonName = "name";
+        String jsonURL = "key";
+        String jsonRES="size";
+        ArrayList<TrailerKey> ans = new ArrayList<>();
+        JSONArray arr = root.getJSONArray(jsonResults);
+        for (int i = 0; i < arr.length(); i++) {
+            String url,name,size;
+            url = arr.getJSONObject(i).getString(jsonURL);
+            name = arr.getJSONObject(i).getString(jsonName);
+            size=arr.getJSONObject(i).getString(jsonRES);
+            ans.add(new TrailerKey(url,name,size));
+        }
+        return ans;
     }
 
 
-    public class JSONTaskTrailer extends AsyncTask<String, String, List<TrailerKey>> {
+    public class JSONTaskTrailer extends AsyncTask<String, Void, String> {
 
-        @Override
-        protected List<TrailerKey> doInBackground(String... params) {
-            HttpURLConnection connection = null;
-            BufferedReader reader = null;
-            try {
-                URL url = new URL(params[0]);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
+    private final String LOG_TAG = JSONTaskTrailer.class.getSimpleName();
 
-                InputStream stream = connection.getInputStream();
+    @Override
+    protected String doInBackground(String... params) {
+        String type = params[0];
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
 
-                reader = new BufferedReader(new InputStreamReader(stream));
+        String response = null;
 
-                StringBuffer buffer = new StringBuffer();
-                String line = "";
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line);
-                }
+        try {
+            final Uri.Builder builder = new Uri.Builder()
+                    .scheme("http")
+                    .authority("api.themoviedb.org")
+                    .appendPath("3")
+                    .appendPath("movie")
+                    .appendPath(r.getId())
+                    .appendPath(type)
+                    .appendQueryParameter("api_key", API_KEY);
 
-                //PARSING
+            URL url = new URL(builder.toString());
 
-                String finalJson = buffer.toString();
-                JSONObject parentObject = new JSONObject(finalJson);
-                JSONArray parentArray = parentObject.getJSONArray("results");
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
 
-                List<TrailerKey> movieModelList = new ArrayList<>();
-
-                for (int i = 0; i < parentArray.length(); i++) {
-                    JSONObject finalObject = parentArray.getJSONObject(i);
-                    TrailerKey mtrailermodel = new TrailerKey();
-                    mtrailermodel.setKey(finalObject.getString("key"));
-                    // adding  the final object in the list
-                    movieModelList.add(mtrailermodel);
-                }
-
-                return movieModelList;
-
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } finally {
-                if (connection != null)
-                    connection.disconnect();
-                try {
-                    if (reader != null)
-                        reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            InputStream inputStream = urlConnection.getInputStream();
+            StringBuffer buffer = new StringBuffer();
+            if (inputStream == null) {
+                return null;
             }
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = reader.readLine()) != null)
+                buffer.append(line + "\n");
+
+            if (buffer.length() == 0) {
+                return null;
+            }
+            response = buffer.toString();
+        } catch (IOException d) {
+            Log.d(LOG_TAG, "Error ", d);
 
             return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<TrailerKey> trailerKeys) {
-            super.onPostExecute(trailerKeys);
-            Log.d("link", "https://www.youtube.com/watch?v=" + trailerKeys.get(0).getKey());
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + trailerKeys.get(0).getKey())));
-        }
-    }
-    public class JSONTaskReview extends AsyncTask<String, String, List<ReviewKey>> {
-
-        @Override
-        protected List<ReviewKey> doInBackground(String... params) {
-            HttpURLConnection connection = null;
-            BufferedReader reader = null;
-            try {
-                URL url = new URL(params[0]);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-
-                InputStream stream = connection.getInputStream();
-
-                reader = new BufferedReader(new InputStreamReader(stream));
-
-                StringBuffer buffer = new StringBuffer();
-                String line = "";
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line);
-                }
-
-                //PARSING
-
-                String finalJson = buffer.toString();
-                JSONObject parentObject = new JSONObject(finalJson);
-                JSONArray parentArray = parentObject.getJSONArray("results");
-
-                List<ReviewKey> movieModelList = new ArrayList<>();
-
-                for (int i = 0; i < parentArray.length(); i++) {
-                    JSONObject finalObject = parentArray.getJSONObject(i);
-                    ReviewKey mtrailermodel = new ReviewKey();
-                    mtrailermodel.setReview(finalObject.getString("content"));
-                    // adding  the final object in the list
-                    movieModelList.add(mtrailermodel);
-                }
-
-                return movieModelList;
-
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } finally {
-                if (connection != null)
-                    connection.disconnect();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (reader != null) {
                 try {
-                    if (reader != null)
-                        reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    reader.close();
+                } catch (final IOException d) {
+                    Log.d(LOG_TAG, "Error", d);
                 }
             }
-
-            return null;
         }
+        return response + type;
+    }
 
-        @Override
-        protected void onPostExecute(List<ReviewKey> Reviewkeys) {
-            super.onPostExecute(Reviewkeys);
-            TextView Review = (TextView) findViewById(R.id.review);
-            Review.setText("REVIEW :\n\n"+Reviewkeys.get(0).getReview());
-            Log.d("review", Reviewkeys.get(0).getReview());
+    @Override
+    protected void onPostExecute(String response) {
+        if (response.endsWith("videos")) {
+            response = response.substring(0,response.length() - 6);
+            try {
+                ArrayList<TrailerKey> keys = getmeURLS(new JSONObject(response));
+                ShowTrailers(keys);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }else{
+            try {
+                response = response.substring(0, response.length() - 7);
+                Reviews(new JSONObject(response));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
+}
+    public class AsyncReview extends AsyncTask<String, Void, String> {
+
+        private final String LOG_TAG = AsyncReview.class.getSimpleName();
+
         @Override
+        protected String doInBackground(String... params) {
+            String type = params[0];
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+
+            String response = null;
+
+            try {
+                final Uri.Builder builder = new Uri.Builder()
+                        .scheme("http")
+                        .authority("api.themoviedb.org")
+                        .appendPath("3")
+                        .appendPath("movie")
+                        .appendPath(r.getId())
+                        .appendPath(type)
+                        .appendQueryParameter("api_key",API_KEY);
+
+                URL url = new URL(builder.toString());
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (inputStream == null) {
+                    return null;
+                }
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null)
+                    buffer.append(line + "\n");
+
+                if (buffer.length() == 0) {
+                    return null;
+                }
+                response = buffer.toString();
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error ", e);
+                return null;
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e(LOG_TAG, "Error", e);
+                    }
+                }
+            }
+            return response + type;
+        }
+        @Override
+        protected void onPostExecute(String response) {
+            try {
+                response = response.substring(0, response.length() - 7);
+                Reviews(new JSONObject(response));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private void Reviews(JSONObject response) throws JSONException {
+        String jsonResults = "results";
+        String jsonAuthor = "author";
+        String jsonContent = "content";
+        String text = "";
+        JSONArray arr = response.getJSONArray(jsonResults);
+        for (int i = 0; i < arr.length(); i++) {
+            text += "REVIEWS : \n\nAuthor : " + arr.getJSONObject(i).getString(jsonAuthor) + ",\n\n";
+            text += arr.getJSONObject(i).getString(jsonContent) + "\n";
+        }
+        if (text.equals(""))
+            text = "There are no reviews for this film.";
+        TextView Review = (TextView) findViewById(R.id.review);
+        Review.setText(text);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
-
-
 
 }
 

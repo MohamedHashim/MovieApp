@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item  android:drawable="@drawable/ic_favorite_outline" ></item>
+    <item android:color="#d5a" android:state_selected="true"/>
+    <item android:color="#a54" android:state_focused="true"/>
+    <item android:color="#a0cc" android:state_pressed="true"/>
+
 
 </selector>

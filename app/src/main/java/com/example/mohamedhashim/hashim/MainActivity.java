@@ -2,18 +2,17 @@ package com.example.mohamedhashim.hashim;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -34,11 +33,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     private TextView tvData;
     private  GridView lvMovies;
+    Boolean mTwoPane;
     public  final String TD_EXTRA="com.example.mohamedhashim.hashim";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,12 +81,13 @@ public class MainActivity extends AppCompatActivity {
 
                 for (int i = 0; i < parentArray.length();i++) {
                     JSONObject finalObject = parentArray.getJSONObject(i);
-                    Result moviemodel = new Result(null,null,null,null,null,null,null,null);
+                    Result moviemodel = new Result(null,null,null,null,null,null,null,null,null);
                     moviemodel.setTitle(finalObject.getString("title"));
+                    moviemodel.setPosterPath(finalObject.getString("poster_path"));
                     moviemodel.setReleaseDate(finalObject.getString("release_date"));
+                    moviemodel.setBackdropPath(finalObject.getString("backdrop_path"));
                     moviemodel.setPopularity(finalObject.getDouble("popularity"));
                     moviemodel.setOverview(finalObject.getString("overview"));
-                    moviemodel.setPosterPath(finalObject.getString("poster_path"));
                     moviemodel.setVoteAverage(finalObject.getDouble("vote_average"));
                     moviemodel.setVoteCount(finalObject.getInt("vote_count"));
                     moviemodel.setId(finalObject.getString("id"));
@@ -137,8 +140,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
-            if(convertView==null){
-                convertView=inflater.inflate(resource,null);
+            if (convertView == null) {
+                convertView = inflater.inflate(resource, null);
             }
             ImageView ivMovieIcon;
             TextView tvMovie;
@@ -150,53 +153,37 @@ public class MainActivity extends AppCompatActivity {
             //  RatingBar rbMovieRating;
 
 
-            ivMovieIcon= (ImageView) convertView.findViewById(R.id.ivIcon);
-            tvMovie= (TextView)convertView.findViewById(R.id.tvMovie);
-            tvYear= (TextView) convertView.findViewById(R.id.tvYear);
-            tvRate= (TextView) convertView.findViewById(R.id.average);
-            vote_count= (TextView) convertView.findViewById(R.id.vote_count);
+            ivMovieIcon = (ImageView) convertView.findViewById(R.id.ivIcon);
+            tvMovie = (TextView) convertView.findViewById(R.id.tvMovie);
+            tvYear = (TextView) convertView.findViewById(R.id.tvYear);
+            tvRate = (TextView) convertView.findViewById(R.id.average);
+            vote_count = (TextView) convertView.findViewById(R.id.vote_count);
 
             // rbMovieRating= (RatingBar) convertView.findViewById(R.id.rbMovie);
 
 
             tvMovie.setText(movieModelList.get(position).getTitle());
             tvYear.setText(movieModelList.get(position).getReleaseDate());
-            tvRate.setText(movieModelList.get(position).getVoteAverage().toString());
+            tvRate.setText((movieModelList.get(position).getVoteAverage().toString()));
             vote_count.setText(movieModelList.get(position).getVoteCount().toString());
-            tvRate.setText(movieModelList.get(position).getVoteAverage().toString());
 //            vote_count.setText(movieModelList.get(position).getVoteCount());
 
             ivMovieIcon.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent =new Intent(getApplicationContext(),DetailsActivity.class);
-                 /*   intent.putExtra("title",movieModelList.get(position).getTitle());
-                    intent.putExtra("year",movieModelList.get(position).getReleaseDate());
-                    intent.putExtra("rate",movieModelList.get(position).getPopularity());
-                    intent.putExtra("vote",movieModelList.get(position).getVoteCount());
-                    intent.putExtra("image",movieModelList.get(position).getPosterPath());
-                    intent.putExtra("ratingbar",movieModelList.get(position).getPopularity()/4);
-                    intent.putExtra("description",movieModelList.get(position).getOverview());
-                 //  intent.putExtra("views",movieModelList.get(position).);
-*/
+                    Intent intent = new Intent(getApplicationContext(), DetailsActivity.class);
                     Toast toast = Toast.makeText(getApplicationContext(), movieModelList.get(position).getTitle(), Toast.LENGTH_SHORT);
                     toast.show();
-                    intent.putExtra("data", new Result(movieModelList.get(position).getPosterPath(), movieModelList.get(position).getOverview(), movieModelList.get(position).getReleaseDate(), movieModelList.get(position).getTitle(), movieModelList.get(position).getPopularity(), movieModelList.get(position).getVoteCount(), movieModelList.get(position).getVoteAverage(),movieModelList.get(position).getId()));
+                    intent.putExtra("data", new Result(movieModelList.get(position).getPosterPath(), movieModelList.get(position).getOverview(), movieModelList.get(position).getReleaseDate(), movieModelList.get(position).getTitle(), movieModelList.get(position).getPopularity(), movieModelList.get(position).getVoteCount(), movieModelList.get(position).getVoteAverage(), movieModelList.get(position).getId(), movieModelList.get(position).getBackdropPath()));
                     startActivity(intent);
 
                 }
             });
 
-             Picasso.with(this.getContext()).load("http://image.tmdb.org/t/p/w185/" + movieModelList.get(position).getPosterPath()).into(ivMovieIcon);
+            Picasso.with(this.getContext()).load("http://image.tmdb.org/t/p/w185/" + movieModelList.get(position).getPosterPath()).into(ivMovieIcon);
 
             return convertView;
         }
-/*
-        @Override
-        public int getCount() {
-            return super.getCount();
-        }
-*/
         @Override
         public Object getItem(int position) {
             return super.getItem(position);
@@ -222,8 +209,19 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         else if(id==R.id.highest_rated){
-            new JSONTask().execute("http://api.themoviedb.org/3/discover/movie?sort_by=vote_average.desc&api_key=5bf92cd209aa47161a39f6ab96f0e0fe&append_to_response=images&include_image_language=en,null");
+            new JSONTask().execute("http://api.themoviedb.org/3/discover/movie?sort_by=vote_average&api_key=5bf92cd209aa47161a39f6ab96f0e0fe&append_to_response=images&include_image_language=en,null");
             return true;
+        }
+        else if (id==R.id.favorite){
+
+           Toast toast=Toast.makeText(getApplicationContext(),"I am working but can't apppear saved data!",Toast.LENGTH_SHORT);
+            toast.show();
+          /* SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor edit = sharedPreferences.edit();
+            Set<String> hs = new HashSet<>();
+            edit.putStringSet(getString(R.string.pref_sort_fav), hs);
+            edit.commit();
+            return true;*/
         }
         return super.onOptionsItemSelected(item);
     }

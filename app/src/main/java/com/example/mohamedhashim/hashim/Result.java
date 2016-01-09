@@ -21,7 +21,7 @@ public class Result implements Serializable {
     private Boolean video;
     private Double voteAverage;
 
-    public Result(String posterPath, String overview, String releaseDate, String title, Double popularity, Integer voteCount, Double voteAverage,String Id) {
+    public Result( String posterPath, String overview,String releaseDate,String title, Double popularity, Integer voteCount, Double voteAverage, String Id,String backdropPath) {
         this.posterPath = posterPath;
         this.overview = overview;
         this.releaseDate = releaseDate;
@@ -36,6 +36,8 @@ public class Result implements Serializable {
         this.video = video;
         this.voteAverage = voteAverage;
     }
+
+
 
     public String getPosterPath() {
         return posterPath;
