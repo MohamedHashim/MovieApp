@@ -20,14 +20,19 @@ android {
             mavenCentral()
         }
     }
+    buildTypes.each {
+        it.buildConfigField 'String', 'MOVIE_API_KEY', '"5bf92cd209aa47161a39f6ab96f0e0fe"'
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
+
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+    compile 'com.android.support:support-v4:23.1.1'
+    compile 'com.android.support:design:23.1.1'
 
 }

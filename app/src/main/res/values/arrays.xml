@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="pref_sort_options">
+        <item>@string/pref_sort_label_pop</item>
+        <item>@string/pref_sort_label_rate</item>
+        <item>@string/pref_sort_label_fav</item>
+    </string-array>
+
+    <string-array name="pref_sort_values">
+        <item>@string/pref_sort_pop</item>
+        <item>@string/pref_sort_rate</item>
+        <item>@string/pref_sort_fav</item>
+    </string-array>
+</resources>
